@@ -1,0 +1,26 @@
+.DS_Store
+# *.so
+prompt_language/.ipynb_checkpoints/*
+prompt_language/.ipynb_checkpoints
+.ipynb_checkpoints/
+analytics/.ipynb_checkpoints/
+data/.ipynb_checkpoints/
+
+build
+tree-sitter-python
+venv
+.venv
+__pycache__
+black-*
+old_data
+DevGPT
+data/
+repos/
+
+**/.env
+**/.cache
+**/log.txt
+
+gemma_model_saved
+llama3-8b
+*.tar.gz

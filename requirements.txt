@@ -1,0 +1,6 @@
+tree-sitter
+tqdm
+langdetect
+matplotlib
+datasets
+black
