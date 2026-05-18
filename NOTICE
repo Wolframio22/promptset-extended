@@ -1,0 +1,29 @@
+This project is the Bachelor's Thesis (TFG) of Levon Asatryan Hambardzumyan
+at the Facultat d'Informàtica de Barcelona (FIB), Universitat Politècnica de
+Catalunya (UPC), academic year 2025-2026.
+
+Directors:
+  - Matías Sebastián Martínez Martínez (ESSI Department, UPC)
+  - Vincenzo De Martino (ESSI Department, UPC)
+
+Attribution to prior work
+-------------------------
+
+The 'gen_prompts/' module is derived from the PromptSet project:
+
+  https://github.com/pisterlabs/promptset
+  Companion code for the paper "PromptSet: A Programmer's Prompting Dataset"
+
+Imported from commit 607ba7373e5eee4ac6a8de7b8337e0345e6d25fc in 2026-05.
+At the time of import, the original repository did not contain an explicit
+LICENSE file. The original code is used here as the starting point for
+academic research. All modifications and additions beyond the original
+gen_prompts module are released under the MIT License (see LICENSE).
+
+Components of the original PromptSet repository that were intentionally
+excluded from this fork because they are not part of the extraction pipeline:
+  - scrape/         (original GitHub scraping scripts)
+  - devGPT/         (DevGPT-derived dataset)
+  - analytics/      (analysis notebooks from the paper)
+  - opro/, opro_gpt4o/  (unrelated experiments)
+  - gen_prompts/upload_ds.py  (pushes dataset to pisterlabs' HuggingFace org)
