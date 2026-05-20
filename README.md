@@ -1,4 +1,4 @@
-# tfg-prompt-extractor
+# Promptset-Extended
 
 > Bachelor's Thesis (TFG) — Facultat d'Informàtica de Barcelona, UPC, 2025-2026.
 
