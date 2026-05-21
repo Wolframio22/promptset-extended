@@ -262,14 +262,32 @@ class PromptDetector:
 
         with open(f"{run_id:03d}/prompts-{uuid.uuid4()}.json", "w") as w:
             json.dump(results, w)
-
+    
     def _detect_prompts(self, filename: str):
-        with open(filename, "rb") as f:
-            tree = self.parser.parse(f.read())
+        # Defensive reading: validate UTF-8 decodability before parsing.
+        # Tree-sitter itself happily parses any byte sequence, but some
+        # heuristics later call .text.decode("utf-8") on captured nodes;
+        # a non-UTF-8 input then triggers SystemError inside the C
+        # binding, which aborts the entire batch under multiprocessing.
+        try:
+            with open(filename, "rb") as f:
+                raw = f.read()
+            raw.decode("utf-8")  # validate
+        except (UnicodeDecodeError, OSError) as e:
+            print(f"[skip] {filename}: {type(e).__name__}")
+            return {}
+
+        tree = self.parser.parse(raw)
 
         results = {}
         for heuristic in self.heuristics:
-            results[heuristic.__name__] = heuristic(tree)
+            # A single misbehaving heuristic on one file must not abort
+            # the rest of the batch. Record an empty result and continue.
+            try:
+                results[heuristic.__name__] = heuristic(tree)
+            except Exception as e:
+                print(f"[error] {heuristic.__name__} on {filename}: {type(e).__name__}: {e}")
+                results[heuristic.__name__] = []
         results["variables"] = find_assignments(tree)
 
         return {filename: results}
