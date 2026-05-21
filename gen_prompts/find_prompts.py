@@ -53,11 +53,28 @@ if __name__ == "__main__":
     os.makedirs(f"{args.run_id:03d}", exist_ok=True)
     os.makedirs("data", exist_ok=True)
 
-    # Find all files
+    # Find all Python source files.
+    #
+    # The original implementation collected every file regardless of
+    # extension, which caused parsers.py to feed binary blobs (images,
+    # archives, compiled artefacts) into Tree-sitter. Once a heuristic
+    # then tried to decode a captured node as UTF-8, the binding raised
+    # SystemError and killed the whole batch.
+    #
+    # We also exclude common dependency / cache directories, which
+    # bloat the input set and are never the source code under study.
+    EXCLUDED_DIRS = {
+        ".git", ".venv", "venv", "env",
+        "node_modules", "__pycache__", ".tox",
+        ".mypy_cache", ".pytest_cache", ".ruff_cache",
+    }
     paths = []
-    for root, path, files in os.walk(args.repo_dir):
+    for root, dirs, files in os.walk(args.repo_dir):
+        # Prune excluded dirs in-place so os.walk skips them entirely.
+        dirs[:] = [d for d in dirs if d not in EXCLUDED_DIRS]
         for file in files:
-            paths.append(os.path.join(root, file))
+            if file.endswith(".py"):
+                paths.append(os.path.join(root, file))
 
     # Batch into thread-count batches, and apply the heuristics
     if args.threads == 1:
