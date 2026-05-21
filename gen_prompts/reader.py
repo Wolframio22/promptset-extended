@@ -349,7 +349,7 @@ def get_strings(folder, name, in_data, out_data):
 
 def run(run_id, name, in_data, out_data, wrap=True, wrap_extra=False):
     folder = f"data/black/2.0-{run_id:03d}-{name}"
-    # formatter(folder, name, in_data, wrap, wrap_extra)
+    formatter(folder, name, in_data, wrap, wrap_extra)
     get_strings(folder, name, in_data, out_data)
 
 
