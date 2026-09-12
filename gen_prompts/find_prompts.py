@@ -111,10 +111,14 @@ if __name__ == "__main__":
     print(f"[info] {len(paths)} Python files to analyse under {args.repo_dir}")
 
     # Batch into thread-count batches, and apply the heuristics
+    # The original code had two undocumented limits: with a single
+    # thread it silently discarded everything beyond 5000 files, and
+    # with several it failed with 'n must be at least one' when the repository
+    # had fewer files than threads.
     if args.threads == 1:
-        process_chunk(paths[:5000], args.run_id)
+        process_chunk(paths, args.run_id)
     else:
-        filenames_batched = batched(paths, len(paths) // args.threads)
+        filenames_batched = batched(paths, max(1, len(paths) // args.threads))
         with Pool(args.threads) as p:
             p.map(partial(process_chunk, run_id=args.run_id), filenames_batched)
 
