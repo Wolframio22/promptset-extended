@@ -4,3 +4,5 @@ langdetect
 matplotlib
 datasets
 black
+streamlit
+pandas
