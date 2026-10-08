@@ -112,6 +112,7 @@ def new_line_in_string(tree: Tree):
 _STRONG_NAMES = ("prompt", "template")
 _WEAK_NAMES = ("query", "system", "instruction")
 _MIN_LEN_STRONG = 12
+_MIN_TOKENS_STRONG = 2
 _MIN_LEN_WEAK = 40
 _MIN_WORDS_WEAK = 6
 # Share of prose words among all tokens. Measured on the evaluation set, real
@@ -206,7 +207,14 @@ def _natural_words(text: str) -> int:
     """
     count = 0
     for token in text.split():
-        token = token.strip(".,:;!?\"'()")
+        token = token.strip(".,:;!?\"'")
+        # A tree-sitter query is written as parenthesised node names, such as
+        # "(identifier)" or "(class_declaration)". Stripping the parentheses
+        # would leave an ordinary word and let the query pass as prose, so a
+        # token wrapped in parentheses is skipped before any other check.
+        if token.startswith("(") and token.endswith(")"):
+            continue
+        token = token.strip("()")
         if len(token) >= 2 and token.isalpha() and not token.isupper():
             count += 1
     return count
@@ -232,7 +240,12 @@ def _carries_prompt_text(statement) -> bool:
     name = _assigned_name(statement)
     text = _longest_literal(statement)
     if any(word in name for word in _STRONG_NAMES):
-        return len(text) >= _MIN_LEN_STRONG
+        # 'prompt' and 'template' are strong signals, but the same names also
+        # label token counters (prompt_tokens), dictionary keys and tuples of
+        # identifiers. Requiring the literal to hold more than one word drops
+        # those cases without affecting real one-line prompts.
+        return (len(text) >= _MIN_LEN_STRONG
+                and len(text.split()) >= _MIN_TOKENS_STRONG)
     # Ambiguous names (query, system...) also appear as tree-sitter queries
     # or SQL, so require actual prose: many natural words and a high ratio.
     return (len(text) >= _MIN_LEN_WEAK
@@ -306,24 +319,38 @@ def used_langchain_tool_class(tree: Tree):
     return result
 
 
+# A @tool decorator may be written in several ways: a bare "@tool", a call
+# "@tool(...)" with a name or options, or qualified as "@langchain.tools.tool".
+# All of them declare a LangChain tool whose docstring is the description sent
+# to the model.
+_TOOL_DECORATOR_RE = re.compile(r"^@\s*([\w.]+\.)?tool\b")
+
+
 def used_langchain_tool(tree: Tree):
+    """Docstrings of functions decorated as LangChain tools.
+
+    The original query required a return annotation ("-> type") and a bare
+    "tool" decorator, so tools declared without an annotation or with
+    "@tool(...)" were missed. This walks every decorated function instead and
+    keeps the ones whose decorator names the LangChain tool factory.
+    """
     tool_query = _query(
-        """(decorated_definition
-        (decorator (identifier) @dec)
-        definition: (function_definition
-            name: (identifier)
-            parameters: (_)
-            return_type: (_)
-            body: (block
-                (expression_statement (string) @docstring))
-        )
-        (#eq? @dec "tool")
-    )"""
-    )
+        "(decorated_definition definition: (function_definition)) @def")
     result = []
-    for capture, name in tool_query.captures(tree.root_node):
-        if name == "docstring":
-            result.append(capture.text.decode("utf-8"))
+    for node, name in tool_query.captures(tree.root_node):
+        if name != "def":
+            continue
+        decorators = [c for c in node.children if c.type == "decorator"]
+        if not any(_TOOL_DECORATOR_RE.match(d.text.decode("utf-8"))
+                   for d in decorators):
+            continue
+        body = (node.child_by_field_name("definition")
+                .child_by_field_name("body"))
+        for statement in body.named_children:
+            if (statement.type == "expression_statement"
+                    and statement.named_children
+                    and statement.named_children[0].type == "string"):
+                result.append(statement.named_children[0].text.decode("utf-8"))
     return result
 
 
