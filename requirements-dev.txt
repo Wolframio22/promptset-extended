@@ -1,0 +1,4 @@
+# Dependencies needed only to run the test suite.
+-r requirements.txt
+pytest
+pytest-cov
