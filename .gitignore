@@ -24,3 +24,4 @@ repos/
 gemma_model_saved
 llama3-8b
 *.tar.gz
+workspace/
