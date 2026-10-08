@@ -2,6 +2,7 @@ import re
 from ast import literal_eval
 import json
 import os
+from functools import lru_cache
 from itertools import product
 from tree_sitter import Language, Parser, Tree
 from tqdm import tqdm
@@ -13,11 +14,22 @@ if not os.path.exists("build/my-languages.so"):
 PY_LANGUAGE = Language("build/my-languages.so", "python")
 
 
+@lru_cache(maxsize=None)
+def _query(source: str):
+    """Compile a tree-sitter query once per process and reuse it.
+
+    The heuristics used to compile their queries again for every file, which
+    took most of the running time. The compiled query is immutable, so it can
+    be shared by every call in the same worker process.
+    """
+    return PY_LANGUAGE.query(source)
+
+
 # Parsers should be of type: Tree -> list[prompt_dict]
 # prompt_dict should be a dictionary with a prompt key and a metadata key
 def find_from_file(tree: Tree):
     results = []
-    query = PY_LANGUAGE.query(
+    query = _query(
         """(call
             function: (attribute
                 object: (identifier) @obj
@@ -43,7 +55,7 @@ def find_assignments(tree: Tree):
         ["attribute", "identifier"],
         ["integer", "string", "binary_operator"],
     ):
-        query = PY_LANGUAGE.query(
+        query = _query(
             f"""({aug}assignment
                 left: ({left_type}) @var.name
                 right: ({right_type}) @var.value
@@ -59,7 +71,7 @@ def all_strings(tree: Tree):
     """All Strings heuristic"""
     result = []
 
-    query = PY_LANGUAGE.query("((string) @var.value)")
+    query = _query("((string) @var.value)")
 
     for usage in query.captures(tree.root_node):
         string = usage[0].text.decode("utf-8")
@@ -73,7 +85,7 @@ def new_line_in_string(tree: Tree):
     """New Line in String definition heuristic"""
     result = []
 
-    var_def_query = PY_LANGUAGE.query(
+    var_def_query = _query(
         """(expression_statement
             (assignment
                 left: (identifier)
@@ -238,7 +250,7 @@ def used_prompt_or_template_name(tree: Tree):
     result = []
     pattern = "|".join(_case_insensitive(w) for w in _STRONG_NAMES + _WEAK_NAMES)
 
-    query = PY_LANGUAGE.query(
+    query = _query(
         f"""(expression_statement
             (assignment
                 left: (identifier) @var.name
@@ -247,7 +259,7 @@ def used_prompt_or_template_name(tree: Tree):
             (#match? @var.name "({pattern})")
         ) @assign"""
     )
-    query_2 = PY_LANGUAGE.query(
+    query_2 = _query(
         f"""(expression_statement
             (augmented_assignment
                 left: (identifier) @var.name
@@ -269,7 +281,7 @@ def used_prompt_or_template_name(tree: Tree):
 
 
 def used_langchain_tool_class(tree: Tree):
-    tool_query = PY_LANGUAGE.query(
+    tool_query = _query(
         """(class_definition
             name: (identifier)
             superclasses: (argument_list
@@ -295,7 +307,7 @@ def used_langchain_tool_class(tree: Tree):
 
 
 def used_langchain_tool(tree: Tree):
-    tool_query = PY_LANGUAGE.query(
+    tool_query = _query(
         """(decorated_definition
         (decorator (identifier) @dec)
         definition: (function_definition
@@ -318,7 +330,7 @@ def used_langchain_tool(tree: Tree):
 def used_in_langchain_llm_call(tree: Tree):
     """Find variables used in langchain llm calls"""
     result = []
-    from_template_query = PY_LANGUAGE.query(
+    from_template_query = _query(
         """(call 
         function: 
         (attribute
@@ -330,7 +342,7 @@ def used_in_langchain_llm_call(tree: Tree):
     ) @call"""
     )
 
-    template_query = PY_LANGUAGE.query(
+    template_query = _query(
         """(call 
         function: (identifier) @ob
         (#match? @ob "(Template|Message)$")
@@ -350,7 +362,7 @@ def used_in_langchain_llm_call(tree: Tree):
 
 
 def used_chat_function(tree: Tree):
-    query = PY_LANGUAGE.query(
+    query = _query(
         """(call 
         function: 
         (attribute
@@ -373,8 +385,8 @@ def used_in_openai_call(tree: Tree):
     """Find native openai library calls"""
     result = []
 
-    call_query = PY_LANGUAGE.query(
-        """(call
+    call_query = _query(
+        r"""(call
             function: (attribute) @fn.name
             arguments: (argument_list) @fn.args
             (#match? @fn.name "(\.[Cc]hat)?\.?[cC]ompletions?\.create")
@@ -433,6 +445,10 @@ class PromptDetector:
             except Exception as e:
                 print(f"[error] {heuristic.__name__} on {filename}: {type(e).__name__}: {e}")
                 results[heuristic.__name__] = []
-        results["variables"] = find_assignments(tree)
+        try:
+            results["variables"] = find_assignments(tree)
+        except Exception as e:
+            print(f"[error] find_assignments on {filename}: {type(e).__name__}: {e}")
+            results["variables"] = []
 
         return {filename: results}

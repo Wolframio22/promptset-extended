@@ -13,6 +13,7 @@ Two views:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -72,25 +73,44 @@ def es_repositorio(carpeta: Path) -> bool:
 
 
 def clonar(url: str) -> Path:
-    """Clone a repository into the workspace and return its path."""
+    """Clone a repository into the workspace and return its path.
+
+    Two repositories can share the same final name (for example two different
+    forks both called "agent"). To keep them apart, the destination folder
+    carries a short hash of the full URL, so distinct URLs never land in the
+    same directory while the same URL reuses its existing clone.
+    """
+    if not re.match(r"^(https://|http://|git@)", url):
+        raise ValueError(f"URL no válida: {url!r}")
     DIR_CLONES.mkdir(parents=True, exist_ok=True)
     nombre = url.rstrip("/").split("/")[-1].replace(".git", "")
-    destino = DIR_CLONES / nombre
+    sufijo = hashlib.sha1(url.encode("utf-8")).hexdigest()[:8]
+    destino = DIR_CLONES / f"{nombre}-{sufijo}"
     if destino.exists():
         return destino
-    subprocess.run(["git", "clone", "--depth", "1", url, str(destino)],
-                   check=True, capture_output=True)
+    # GIT_TERMINAL_PROMPT=0 stops git from blocking on a credentials prompt if
+    # the URL is private or mistyped; "--" keeps the URL from being read as an
+    # option.
+    entorno = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
+    subprocess.run(["git", "clone", "--depth", "1", "--", url, str(destino)],
+                   check=True, capture_output=True, text=True, env=entorno)
     return destino
 
 
-def ejecutar_motor(repo: Path, run_id: int, hilos: int = 4) -> Path:
+def ejecutar_motor(repo: Path, run_id: int, hilos: int = 4,
+                   excluir: str = "") -> Path:
     """Run find_prompts on one repository and return the generated JSON."""
-    subprocess.run(
-        [sys.executable, "-m", "gen_prompts.find_prompts",
-         "--run_id", str(run_id), "--repo_dir", str(repo),
-         "--threads", str(hilos)],
-        cwd=RAIZ, check=True, capture_output=True,
-    )
+    orden = [sys.executable, "-m", "gen_prompts.find_prompts",
+             "--run_id", str(run_id), "--repo_dir", str(repo),
+             "--threads", str(hilos)]
+    if excluir.strip():
+        orden += ["--exclude-dirs", excluir.strip()]
+    completado = subprocess.run(orden, cwd=RAIZ, capture_output=True, text=True)
+    if completado.returncode != 0:
+        # Surface the engine's own error instead of a bare exit code.
+        detalle = (completado.stderr or completado.stdout or "").strip()
+        ultimas = "\n".join(detalle.splitlines()[-3:])
+        raise RuntimeError(ultimas or f"código de salida {completado.returncode}")
     return DIR_DATOS / f"repo_data_export_{run_id:03d}.json"
 
 
@@ -118,8 +138,29 @@ def localizar_linea(archivo: Path, fragmento: str) -> int | None:
     return contenido.count("\n", 0, encontrado.start()) + 1
 
 
-def leer_detecciones(json_path: Path, repo: Path, nombre: str) -> list[dict]:
-    """Flatten the engine output into one row per detection."""
+def commit_de(carpeta: Path) -> str:
+    """Commit checked out in a repository, or '' if it cannot be read.
+
+    Each detection carries the commit of the code it was found in, so a
+    result can be traced back to the exact version that was analysed. The
+    command-line CSV export records the same information.
+    """
+    try:
+        completado = subprocess.run(
+            ["git", "-C", str(carpeta), "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True)
+        return completado.stdout.strip()
+    except (subprocess.CalledProcessError, OSError):
+        return ""
+
+
+def leer_detecciones(json_path: Path, repo: Path, nombre: str,
+                     commit: str = "") -> list[dict]:
+    """Flatten the engine output into one row per detection.
+
+    The visible columns follow the same order as the command-line CSV export:
+    repository, commit, file, line, heuristic and prompt.
+    """
     datos = json.loads(json_path.read_text(encoding="utf-8"))
     filas: list[dict] = []
     for ruta_txt, heuristicas in datos.items():
@@ -135,9 +176,10 @@ def leer_detecciones(json_path: Path, repo: Path, nombre: str) -> list[dict]:
                 texto = captura if isinstance(captura, str) else str(captura)
                 filas.append({
                     "repositorio": nombre,
+                    "commit": commit,
                     "archivo": str(relativa).replace("\\", "/"),
-                    "heuristica": heuristica,
                     "linea": localizar_linea(ruta, texto),
+                    "heuristica": heuristica,
                     "prompt": " ".join(texto.split()),
                     "_ruta_absoluta": str(ruta),
                     "_texto_original": texto,
@@ -231,6 +273,12 @@ def pantalla_analisis() -> None:
         hilos = st.slider("Hilos de análisis", 1, maximo, min(4, maximo),
                           help="Procesos en paralelo que usa el motor. Cada uno "
                                "consume memoria: subirlo no siempre acelera.")
+        excluir = st.text_input(
+            "Carpetas a excluir (opcional)",
+            help="Nombres de carpeta separados por comas, además de las que el "
+                 "motor ya ignora (venv, node_modules, testbed...). Útil cuando "
+                 "un repositorio guarda copias de otros proyectos con un nombre "
+                 "propio.")
         lanzar = st.form_submit_button("Analizar", type="primary",
                                        disabled=not repos)
 
@@ -248,12 +296,16 @@ def pantalla_analisis() -> None:
                 if modo != "Carpeta local":
                     url = [u for u in urls if u.rstrip("/").endswith(nombre)][0]
                     carpeta = clonar(url)
-                json_path = ejecutar_motor(carpeta, run_id=i, hilos=hilos)
-                filas.extend(leer_detecciones(json_path, carpeta, nombre))
+                json_path = ejecutar_motor(carpeta, run_id=i, hilos=hilos,
+                                           excluir=excluir)
+                filas.extend(leer_detecciones(json_path, carpeta, nombre,
+                                              commit_de(carpeta)))
             except subprocess.CalledProcessError as e:
-                errores.append(f"{nombre}: el motor falló ({e.returncode})")
+                detalle = (e.stderr or "").strip().splitlines()
+                errores.append(f"{nombre}: git falló ({detalle[-1] if detalle else e}"
+                               ")")
             except Exception as e:                      # noqa: BLE001
-                errores.append(f"{nombre}: {type(e).__name__} - {e}")
+                errores.append(f"{nombre}: {e}")
             barra.progress(i / len(repos))
 
         estado.empty()
@@ -293,14 +345,20 @@ def pantalla_resultados() -> None:
 
     st.caption(f"{len(vista)} prompts en {vista['archivo'].nunique()} archivos.")
     tabla = vista.copy()
-    tabla["linea"] = tabla["linea"].astype("Int64")   # evita que salga 184.0
+    # Keep line numbers as integers. A single detection without a line turns
+    # the whole column into floats, so 184 would be shown as 184.0 both in the
+    # table and in the downloaded CSV.
+    tabla["linea"] = tabla["linea"].astype("Int64")
+    # Since Streamlit 1.50 the table takes the full width by default; the old
+    # use_container_width argument is deprecated and scheduled for removal.
     st.dataframe(
         tabla[["repositorio", "archivo", "linea", "heuristica", "prompt"]],
-        use_container_width=True, hide_index=True)
+        hide_index=True)
 
+    # The CSV carries every visible column plus the commit of each repository.
     st.download_button(
         "Descargar como CSV",
-        vista.drop(columns=["_ruta_absoluta", "_texto_original"]).to_csv(index=False),
+        tabla.drop(columns=["_ruta_absoluta", "_texto_original"]).to_csv(index=False),
         file_name="prompts.csv", mime="text/csv")
 
     st.divider()

@@ -1,8 +1,10 @@
-tree-sitter
+# Core extraction engine
+tree-sitter==0.20.4
 tqdm
-langdetect
-matplotlib
-datasets
-black
+
+# Graphical interface (app.py)
 streamlit
 pandas
+
+# Post-processing of the original PromptSet pipeline (gen_prompts/reader.py)
+black

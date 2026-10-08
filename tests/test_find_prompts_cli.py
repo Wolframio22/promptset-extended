@@ -115,6 +115,56 @@ def test_invalid_utf8_does_not_abort_the_batch(tmp_path):
     assert good["used_prompt_or_template_name"]
 
 
+def _read_csv(run_id):
+    path = ROOT / "data" / f"repo_data_export_{run_id:03d}.csv"
+    text = path.read_text(encoding="utf-8")
+    path.unlink()
+    import csv
+    import io
+    return list(csv.DictReader(io.StringIO(text)))
+
+
+def test_csv_export_has_expected_columns_and_line(tmp_path):
+    write(tmp_path / "project" / "agent.py",
+          'SYSTEM_PROMPT = """You are a careful software engineering agent."""\n')
+
+    completed, _ = run_find_prompts(
+        tmp_path, _RUN_ID_BASE + 8, extra=("--csv",))
+    assert completed.returncode == 0, completed.stderr
+
+    rows = _read_csv(_RUN_ID_BASE + 8)
+    assert [*rows[0]] == ["repository", "commit", "file",
+                          "line", "heuristic", "prompt"]
+    row = next(r for r in rows if r["heuristic"] == "used_prompt_or_template_name")
+    assert row["repository"] == "project"
+    assert row["file"] == "project/agent.py"
+    assert row["line"] == "1"
+    assert "careful software engineering agent" in row["prompt"]
+
+
+def test_csv_export_records_commit_for_a_git_repository(tmp_path):
+    write(tmp_path / "agent.py",
+          'SYSTEM_PROMPT = """You are a careful software engineering agent."""\n')
+    for cmd in (["git", "init", "-q"],
+                ["git", "config", "user.email", "t@t"],
+                ["git", "config", "user.name", "t"],
+                ["git", "add", "-A"],
+                ["git", "commit", "-q", "-m", "init"]):
+        subprocess.run(cmd, cwd=tmp_path, check=True,
+                       capture_output=True, text=True)
+
+    completed, _ = run_find_prompts(
+        tmp_path, _RUN_ID_BASE + 9, extra=("--csv",))
+    assert completed.returncode == 0, completed.stderr
+
+    rows = _read_csv(_RUN_ID_BASE + 9)
+    expected = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=tmp_path,
+        capture_output=True, text=True, check=True).stdout.strip()
+    assert rows and all(r["commit"] == expected for r in rows)
+    assert all(r["repository"] == tmp_path.name for r in rows)
+
+
 @pytest.mark.slow
 def test_more_than_5000_files_with_one_thread(tmp_path):
     # Regression: with a single thread, paths[:5000] silently dropped every
