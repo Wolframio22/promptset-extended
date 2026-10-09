@@ -27,3 +27,10 @@ excluded from this fork because they are not part of the extraction pipeline:
   - analytics/      (analysis notebooks from the paper)
   - opro/, opro_gpt4o/  (unrelated experiments)
   - gen_prompts/upload_ds.py  (pushes dataset to pisterlabs' HuggingFace org)
+
+Components removed after the import:
+  - gen_prompts/reader.py  (post-processing step of the original pipeline.
+    It evaluated expressions taken from the analysed repositories with
+    Python's eval(), which conflicts with the requirement that the tool never
+    runs third-party code. Neither the validation nor the graphical interface
+    used it: both work on the output of gen_prompts/find_prompts.py.)
