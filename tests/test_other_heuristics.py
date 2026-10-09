@@ -57,11 +57,6 @@ class TestLangchainTool:
         )
         assert len(used_langchain_tool(parse(source))) == 1
 
-    @pytest.mark.xfail(
-        reason="Known limitation: the query requires a return annotation, so "
-               "tools declared without '-> type' are missed.",
-        strict=True,
-    )
     def test_detects_tool_without_return_annotation(self, parse):
         source = (
             "@tool\n"
@@ -70,6 +65,27 @@ class TestLangchainTool:
             "    return run(query)\n"
         )
         assert len(used_langchain_tool(parse(source))) == 1
+
+    @pytest.mark.parametrize("source", [
+        # @tool(...) with a name argument (Lingxi edit_tool.py).
+        '@tool("str_replace_editor")\n'
+        "def edit(command: str):\n"
+        '    """Edit a file in the repository."""\n',
+        # Fully qualified decorator.
+        "@langchain_core.tools.tool\n"
+        "def read(path: str):\n"
+        '    """Read a file from disk."""\n',
+    ])
+    def test_detects_tool_decorator_variants(self, parse, source):
+        assert len(used_langchain_tool(parse(source))) == 1
+
+    def test_ignores_similarly_named_decorators(self, parse):
+        source = (
+            "@toolbox\n"
+            "def helper(x):\n"
+            '    """Not a LangChain tool."""\n'
+        )
+        assert used_langchain_tool(parse(source)) == []
 
 
 class TestLangchainToolClass:

@@ -38,6 +38,11 @@ class TestStrongNames:
         'tool_template = {"type": "function", "name": ""}',
         "prompt_messages = self.construct_prompt(idx)",
         "templates_path = ['_templates']",
+        # A single long token is a name or a key, not a prompt (cost.py).
+        'prompt_tokens = result["usage"]["prompt_tokens"]',
+        # A tuple of identifiers whose name happens to contain 'template'
+        # (cpp_lint.py in the contrast set).
+        '_HEADERS_CONTAINING_TEMPLATES = ("unary_function", "binary_function")',
     ])
     def test_rejects_assignments_without_prompt_text(self, parse, source):
         # All of these were false positives of the original heuristic.
@@ -79,12 +84,10 @@ class TestWeakNames:
         assert detected_names(parse, source) == set()
 
 
-@pytest.mark.xfail(
-    reason="Known limitation: a tree-sitter query made of plain node names "
-           "reads as prose and passes the filter (observed in Lingxi).",
-    strict=True,
-)
 def test_tree_sitter_query_with_plain_node_names(parse):
+    # A tree-sitter query assigned to a 'query'-named variable (Lingxi
+    # constant.py). The parenthesised node names are not counted as prose, so
+    # the assignment no longer passes the filter.
     source = ('query_func = PY_LANGUAGE.query("""name: (identifier) @name '
               'parameters: (parameters) @args body: (block) @block""")')
     assert detected_names(parse, source) == set()
