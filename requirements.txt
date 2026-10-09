@@ -5,6 +5,3 @@ tqdm
 # Graphical interface (app.py)
 streamlit
 pandas
-
-# Post-processing of the original PromptSet pipeline (gen_prompts/reader.py)
-black
