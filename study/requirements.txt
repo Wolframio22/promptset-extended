@@ -1,0 +1,2 @@
+# Only needed for the figures of the studies (study/).
+matplotlib

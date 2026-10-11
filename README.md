@@ -59,6 +59,13 @@ source venv/bin/activate
 streamlit run app.py
 ```
 
+## Studies
+
+The `study/` folder holds the scripts of the large-scale study on GitHub
+(RQ3): repository selection, an overnight run of both the original and the
+extended heuristics, and the analysis that produces the tables and figures of
+the thesis. See [`study/README.md`](study/README.md).
+
 ## Running the tests
 
 ```bash
