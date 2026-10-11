@@ -1,4 +1,5 @@
 # Dependencies needed only to run the test suite.
 -r requirements.txt
+-r study/requirements.txt
 pytest
 pytest-cov

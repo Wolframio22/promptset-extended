@@ -25,3 +25,5 @@ gemma_model_saved
 llama3-8b
 *.tar.gz
 workspace/
+study/rq3/clones/
+study/rq3/results/
