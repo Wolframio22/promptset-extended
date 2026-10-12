@@ -1,0 +1,35 @@
+# Runs the linter and the whole test suite on every pull request and on
+# every push to main.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Build the Tree-sitter grammar
+        run: |
+          git clone --depth 1 --branch v0.20.0 https://github.com/tree-sitter/tree-sitter-python
+          mkdir -p build
+          python -c "from tree_sitter import Language; Language.build_library('build/my-languages.so', ['tree-sitter-python'])"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Tests with coverage
+        run: pytest -m "" --cov --cov-report=term-missing

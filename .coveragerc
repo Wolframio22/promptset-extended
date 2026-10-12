@@ -1,0 +1,9 @@
+# Test coverage settings. The engine runs in subprocesses during the tests
+# (the command-line and interface tests launch find_prompts), so coverage
+# follows them as well.
+[run]
+patch = subprocess
+source =
+    gen_prompts
+    app
+    app_text

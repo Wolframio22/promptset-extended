@@ -151,7 +151,7 @@ def spearman(x, y):
         return float("nan")
     rx, ry = ranks(x), ranks(y)
     mx, my = statistics.fmean(rx), statistics.fmean(ry)
-    cov = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    cov = sum((a - mx) * (b - my) for a, b in zip(rx, ry, strict=True))
     sx = math.sqrt(sum((a - mx) ** 2 for a in rx))
     sy = math.sqrt(sum((b - my) ** 2 for b in ry))
     return cov / (sx * sy) if sx and sy else float("nan")
@@ -170,6 +170,11 @@ def wilson(k, n, z=1.96):
 
 def normalise(text: str) -> str:
     return " ".join(text.split())
+
+
+def github_url(repository: str, commit: str, path: str, line) -> str:
+    url = f"https://github.com/{repository}/blob/{commit}/{path}"
+    return url + (f"#L{line}" if line else "")
 
 
 # --------------------------------------------------------------------------
@@ -327,7 +332,7 @@ def build(repos):
                 "repository": name, "band": row["band"], "file": r["file"], "line": line,
                 "heuristic": r["heuristic"], "heuristic_name": HEURISTICS.get(r["heuristic"], r["heuristic"]),
                 "status": r["status"],
-                "url": f"https://github.com/{name}/blob/{commit}/{r['file']}" + (f"#L{line}" if line else ""),
+                "url": github_url(name, commit, r["file"], line),
                 "in_prompt_file": int("prompt" in r["file"].lower()),
                 **feats, "text": r["text"][:3000],
             })
@@ -336,7 +341,7 @@ def build(repos):
                 line = r.get("line") or ""
                 removed.append({
                     "repository": name, "file": r["file"], "line": line, "heuristic": r["heuristic"],
-                    "url": f"https://github.com/{name}/blob/{commit}/{r['file']}" + (f"#L{line}" if line else ""),
+                    "url": github_url(name, commit, r["file"], line),
                     "text": r["text"][:3000],
                 })
     return rows, detections, removed
@@ -518,7 +523,7 @@ def figures(rows, detections, summary, per_heuristic, out: Path):
     # 2. Detections per repository (all analysed repositories with Python code).
     counts = [r["detections_final"] for r in with_py]
     bins = []
-    for low, high, label in BINS:
+    for low, high, _label in BINS:
         bins.append(sum(1 for c in counts if c >= low and (high is None or c <= high)))
     ps.columns([b[2] for b in BINS], bins, figdir / "rq3_detecciones_por_repo",
                xlabel="Prompts detectados por repositorio")
@@ -554,7 +559,8 @@ def figures(rows, detections, summary, per_heuristic, out: Path):
     if summary["prompts"]["literal"]:
         ps.hbars([k for k, _ in items], [v for _, v in items], figdir / "rq3_rasgos_prompts",
                  value_text=ps.pct, xmax=max(v for _, v in items) * 1.05 or 1,
-                 note=f"Sobre {ps.num(summary['prompts']['literal'])} detecciones que contienen el texto del prompt.")
+                 note=(f"Sobre {ps.num(summary['prompts']['literal'])} detecciones "
+                       "que contienen el texto del prompt."))
 
     # 7. Project types.
     types = summary["types"]
@@ -562,7 +568,8 @@ def figures(rows, detections, summary, per_heuristic, out: Path):
     if items:
         ps.hbars([k for k, _ in items], [v["pct"] for _, v in items], figdir / "rq3_tipos_proyecto",
                  value_text=ps.pct, xmax=max(v["pct"] for _, v in items) * 1.05,
-                 note=f"Sobre {ps.num(n_pop)} repositorios con prompts. Un repositorio puede tener varios tipos.")
+                 note=(f"Sobre {ps.num(n_pop)} repositorios con prompts. "
+                       "Un repositorio puede tener varios tipos."))
 
 
 # --------------------------------------------------------------------------

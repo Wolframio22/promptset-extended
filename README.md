@@ -83,13 +83,18 @@ The `study/` folder holds the scripts of the large-scale study on GitHub
 extended heuristics, and the analysis that produces the tables and figures of
 the thesis. See [`study/README.md`](study/README.md).
 
-## Running the tests
+## Running the tests and the quality checks
 
 ```bash
 pip install -r requirements-dev.txt
-pytest            # fast tests
-pytest -m slow    # the long-running regression test as well
+pytest                         # fast tests
+pytest -m ""                   # all tests, including the long regression test
+pytest -m "" --cov             # with coverage (engine, interface and texts)
+ruff check .                   # linter (settings in ruff.toml)
 ```
+
+GitHub Actions runs the linter and the whole test suite on every pull
+request (`.github/workflows/ci.yml`).
 
 ## License
 
