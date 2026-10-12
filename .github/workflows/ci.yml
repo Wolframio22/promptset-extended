@@ -23,6 +23,8 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Build the Tree-sitter grammar
+        env:
+          SETUPTOOLS_USE_DISTUTILS: stdlib
         run: |
           git clone --depth 1 --branch v0.20.0 https://github.com/tree-sitter/tree-sitter-python
           mkdir -p build
