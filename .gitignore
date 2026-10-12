@@ -27,3 +27,12 @@ llama3-8b
 workspace/
 study/rq3/clones/
 study/rq3/results/
+.coverage
+.coverage.*
+htmlcov/
+.ruff_cache/
+# RQ3 study: the run log and the two outputs that contain code from the
+# analysed repositories are kept out of version control
+study/rq3/run.log
+study/rq3/analysis/detections.csv
+study/rq3/analysis/validation_sample.csv

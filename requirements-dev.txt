@@ -1,5 +1,7 @@
-# Dependencies needed only to run the test suite.
+# Dependencies needed only to run the test suite and the quality checks.
 -r requirements.txt
 -r study/requirements.txt
 pytest
 pytest-cov
+coverage>=7.10
+ruff

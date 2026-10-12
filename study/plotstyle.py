@@ -9,6 +9,9 @@ fixed rules:
   * thin bars with a rounded end and a square base, a recessive hairline grid
     only where values are not written next to the marks;
   * numbers in Spanish format (1.234 and 56,7 %).
+
+The colours come from a palette checked for colour-blind readers and
+contrast against a white page.
 """
 
 from __future__ import annotations
@@ -38,7 +41,7 @@ VERSION_COLOURS = {"original": "#86b6ef", "intermedia": "#3987e5", "final": "#1c
 WIDTH = 6.0            # inches, close to the text width of the thesis
 ROW = 0.30             # inches per bar row in horizontal bar charts
 BAR = 0.16             # bar thickness in inches (well under 24 px)
-FONT = 9
+FONT = 10.5            # the thesis body is 12 pt; figures are shown at text width
 
 
 def setup() -> None:
@@ -233,7 +236,7 @@ def dumbbell(labels, before, after, path, names=("PromptSet original", "promptse
     ax.set_axisbelow(True)
     ax.set_yticks(range(n), labels)
     old, new = VERSION_COLOURS["original"], VERSION_COLOURS["final"]
-    for i, (b, a) in enumerate(zip(before, after)):
+    for i, (b, a) in enumerate(zip(before, after, strict=True)):
         ax.plot([b, a], [i, i], color=BASELINE, linewidth=1.6, zorder=2, solid_capstyle="round")
         ax.scatter([b], [i], s=42, color=old, edgecolors=SURFACE, linewidths=1.4, zorder=3)
         ax.scatter([a], [i], s=42, color=new, edgecolors=SURFACE, linewidths=1.4, zorder=4)
@@ -309,4 +312,56 @@ def strip_by_group(groups, series, path, ylabel, xlabel="", seed=7):
     ax.set_ylabel(ylabel, labelpad=5)
     if xlabel:
         ax.set_xlabel(xlabel, labelpad=6)
+    save(fig, path)
+
+
+def grouped_hbars(categories, series, values, colours, path, value_text=None, xmax=None,
+                  note=None, pitch=0.20, group_gap=0.20):
+    """Horizontal bars grouped by category, one bar per series.
+
+    `values[c][s]` is the value of series s in category c. Series that follow
+    an order (versions of the tool) take shades of one hue, lighter first.
+    Every bar carries its value at the tip, so no value axis is drawn.
+    """
+    value_text = value_text or num
+    n_cat, n_ser = len(categories), len(series)
+    rows_in = n_cat * (n_ser * pitch + group_gap)
+    legend_in, note_in = 0.42, (0.28 if note else 0.08)
+    height = rows_in + legend_in + note_in
+    fig = plt.figure(figsize=(WIDTH, height))
+    left = _text_width_in(fig, categories) + 0.15
+    right_pad = 0.75
+    ax = fig.add_axes([left / WIDTH, note_in / height, (WIDTH - left - right_pad) / WIDTH,
+                       rows_in / height])
+    top = xmax or max(max(row) for row in values) or 1
+    ax.set_xlim(0, top)
+    # One y unit per inch keeps the arithmetic simple.
+    ax.set_ylim(rows_in, 0)
+    _clean(ax, keep=("left",))
+    ax.spines["left"].set_color(BASELINE)
+    ax.xaxis.set_major_locator(NullLocator())
+    thickness = pitch - 0.035                       # leaves a small gap between bars
+    centres = []
+    for c in range(n_cat):
+        start = c * (n_ser * pitch + group_gap) + group_gap / 2
+        centres.append(start + n_ser * pitch / 2)
+        for s in range(n_ser):
+            y = start + s * pitch
+            rounded_bar(ax, y, 0, values[c][s], thickness, colours[s])
+            ax.annotate(value_text(values[c][s]), (values[c][s], y + thickness / 2),
+                        xytext=(4, 0), textcoords="offset points", va="center", ha="left",
+                        color=INK_2, fontsize=FONT - 1)
+    ax.set_yticks(centres, categories)
+    handles = [Rectangle((0, 0), 1, 1, facecolor=c, linewidth=0) for c in colours]
+    # Aligned with the bars when it fits, otherwise with the figure edge.
+    legend_w = _text_width_in(fig, [" ".join(series)], FONT - 0.5) + 0.45 * n_ser + 0.3
+    anchor = left / WIDTH - 0.01 if left + legend_w < WIDTH else 0.0
+    fig.legend(handles, series, loc="upper left", ncol=n_ser, frameon=False,
+               bbox_to_anchor=(anchor, 1.0), handlelength=1.1, handleheight=0.9,
+               handletextpad=0.4, columnspacing=1.4, fontsize=FONT - 0.5, labelcolor=INK_2)
+    if note:
+        x = left / WIDTH
+        if left + _text_width_in(fig, [note], FONT - 1) > WIDTH - 0.05:
+            x = 0.01
+        fig.text(x, 0.06 / height, note, color=MUTED, fontsize=FONT - 1, va="bottom")
     save(fig, path)

@@ -1,12 +1,13 @@
-import re
-from ast import literal_eval
 import json
 import os
-from functools import lru_cache
-from itertools import product
-from tree_sitter import Language, Parser, Tree
-from tqdm import tqdm
+import re
 import uuid
+from ast import literal_eval
+from functools import cache
+from itertools import product
+
+from tqdm import tqdm
+from tree_sitter import Language, Parser, Tree
 
 if not os.path.exists("build/my-languages.so"):
     Language.build_library("build/my-languages.so", ["tree-sitter-python"])
@@ -14,7 +15,7 @@ if not os.path.exists("build/my-languages.so"):
 PY_LANGUAGE = Language("build/my-languages.so", "python")
 
 
-@lru_cache(maxsize=None)
+@cache
 def _query(source: str):
     """Compile a tree-sitter query once per process and reuse it.
 
@@ -358,8 +359,8 @@ def used_in_langchain_llm_call(tree: Tree):
     """Find variables used in langchain llm calls"""
     result = []
     from_template_query = _query(
-        """(call 
-        function: 
+        """(call
+        function:
         (attribute
             object: (identifier) @ob
             attribute: (identifier)
@@ -370,7 +371,7 @@ def used_in_langchain_llm_call(tree: Tree):
     )
 
     template_query = _query(
-        """(call 
+        """(call
         function: (identifier) @ob
         (#match? @ob "(Template|Message)$")
         arguments: (argument_list)
@@ -390,8 +391,8 @@ def used_in_langchain_llm_call(tree: Tree):
 
 def used_chat_function(tree: Tree):
     query = _query(
-        """(call 
-        function: 
+        """(call
+        function:
         (attribute
             object: (identifier)
             attribute: (identifier) @fn
@@ -446,7 +447,7 @@ class PromptDetector:
 
         with open(f"{run_id:03d}/prompts-{uuid.uuid4()}.json", "w") as w:
             json.dump(results, w)
-    
+
     def _detect_prompts(self, filename: str):
         # Defensive reading: validate UTF-8 decodability before parsing.
         # Tree-sitter itself happily parses any byte sequence, but some

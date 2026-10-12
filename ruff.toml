@@ -1,0 +1,13 @@
+# Linter settings (https://docs.astral.sh/ruff/). Run with: ruff check .
+target-version = "py310"
+line-length = 110
+extend-exclude = ["tree-sitter-python", "build", "workspace", "data",
+                  "study/rq3/clones", "study/rq3/results"]
+
+[lint]
+# pycodestyle errors and warnings, pyflakes, import order, bugbear (likely
+# bugs) and pyupgrade (outdated syntax for the supported Python versions).
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[lint.isort]
+known-first-party = ["gen_prompts", "app", "app_text"]

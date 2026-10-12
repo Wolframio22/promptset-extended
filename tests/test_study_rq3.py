@@ -1,18 +1,24 @@
 """Unit tests for the helpers of the RQ3 study scripts (study/rq3/)."""
 
+import importlib.util
 import math
-import sys
 from pathlib import Path
 
 import pytest
 
-pytest.importorskip("matplotlib")   # the analysis draws figures
-
 STUDY = Path(__file__).resolve().parents[1] / "study" / "rq3"
-sys.path.insert(0, str(STUDY))
 
-import analyze_study as an  # noqa: E402
-import run_study as rs  # noqa: E402
+
+def load(name):
+    """Import a script of study/rq3, which is not a package."""
+    spec = importlib.util.spec_from_file_location(name, STUDY / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+an = load("analyze_study")
+rs = load("run_study")
 
 
 @pytest.mark.parametrize("path, expected", [
