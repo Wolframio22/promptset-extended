@@ -16,8 +16,10 @@ preserved under `gen_prompts/` and extended for this thesis with:
   templates loaded from a file.
 - A JSON export and an optional CSV export (`--csv`) with one row per
   detection: repository, commit, file, line, heuristic and prompt text.
-- A Streamlit interface (`app.py`) to launch an analysis and browse the
-  detected prompts, jumping from each one to its place in the source.
+- A Streamlit interface (`app.py`) in Spanish, English and Catalan to launch
+  an analysis, browse the detected prompts with readable names for each
+  heuristic, and review them one by one in their code: mark whether each
+  detection is a prompt, rate it and comment it, then export the review.
 - A test suite under `tests/` (see below).
 
 See [`NOTICE`](NOTICE) for attribution to the original work and
@@ -58,6 +60,21 @@ python -m gen_prompts.find_prompts --run_id 1 --repo_dir ~/repos --exclude-dirs 
 source venv/bin/activate
 streamlit run app.py
 ```
+
+Three steps, chosen at the top of the page:
+
+1. **Analyse**: type GitHub repositories (`user/repo` is enough) or pick a
+   local folder.
+2. **Results**: summary charts, filters (repository, type of detection,
+   review status, free text) and CSV export.
+3. **Review**: each detection in its code, with a link to the exact line on
+   GitHub. Mark whether it is a prompt, rate it (1–5 stars) and comment it.
+   Reviews are saved in `data/revisiones.json` and included in the export.
+
+The language (Spanish, English, Catalan) is chosen in the sidebar; the texts
+live in `app_text.py`. To share the interface with someone else (for example
+through a tunnel), start it with `PROMPTSET_SOLO_GITHUB=1 streamlit run app.py`:
+the option to analyse a folder of this computer is then hidden.
 
 ## Studies
 
