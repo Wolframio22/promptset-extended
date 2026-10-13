@@ -16,7 +16,8 @@ Three steps, chosen at the top of the page:
 
 The texts are in Spanish, English and Catalan (app_text.py). Reviews are
 saved to data/revisiones.json, so they survive a restart and a new analysis
-of the same code.
+of the same code. In the public version (streamlit_app.py) each visitor's
+reviews stay in their own browser session instead.
 """
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -55,9 +57,11 @@ DIR_DATOS = RAIZ / "data"                       # engine output directory
 FICHERO_REVISIONES = Path(os.environ.get("PROMPTSET_REVISIONES", DIR_DATOS / "revisiones.json"))
 URL_PROYECTO = "https://github.com/Wolframio22/promptset-extended"
 URL_EJEMPLO = "https://github.com/TheR1D/shell_gpt"
-# When the interface is shared with someone else (for example through a
-# tunnel in a remote user session), PROMPTSET_SOLO_GITHUB=1 hides the local
-# folder option, so nobody can browse the files of this computer.
+# When the interface is shared with other people (the public version in
+# streamlit_app.py, or a tunnel in a remote user session),
+# PROMPTSET_SOLO_GITHUB=1 hides the local folder option, so nobody can browse
+# the files of this computer, and keeps each visitor's reviews in their own
+# browser session instead of the shared file.
 SOLO_GITHUB = os.environ.get("PROMPTSET_SOLO_GITHUB", "") not in ("", "0")
 AZUL = "#2a78d6"                                # single-series colour of the charts
 OPCIONES_REVISION = ("si", "no", "dudoso")
@@ -423,6 +427,39 @@ def poner_ejemplo() -> None:
     st.session_state["urls_txt"] = URL_EJEMPLO
 
 
+@st.cache_resource(show_spinner="Preparando el analizador de Python / Preparing the Python analyser…")
+def preparar_gramatica() -> None:
+    """Download and compile the Tree-sitter grammar if it is missing.
+
+    A new installation, such as the public version on Streamlit Community
+    Cloud, only has the code of the repository. The commands are the ones in
+    the README and in the continuous integration. Thanks to the cache, this
+    runs only once, however many people open the page.
+    """
+    if (RAIZ / "build" / "my-languages.so").exists():
+        return
+    if not (RAIZ / "tree-sitter-python").exists():
+        subprocess.run(["git", "clone", "--depth", "1", "--branch", "v0.20.0",
+                        "https://github.com/tree-sitter/tree-sitter-python"],
+                       cwd=RAIZ, check=True)
+    (RAIZ / "build").mkdir(exist_ok=True)
+    # As in the continuous integration, the distutils of the standard library
+    # is used: the copy bundled with recent setuptools links the grammar wrongly.
+    subprocess.run([sys.executable, "-c", "from tree_sitter import Language; "
+                    "Language.build_library('build/my-languages.so', ['tree-sitter-python'])"],
+                   cwd=RAIZ, check=True, env={**os.environ, "SETUPTOOLS_USE_DISTUTILS": "stdlib"})
+
+
+@st.cache_resource
+def cerrojo_motor() -> threading.Lock:
+    """One analysis at a time for everybody using this copy of the interface.
+
+    Two analyses of the same repository would share its clone and the
+    engine's working files, so the second one waits for the first to finish.
+    """
+    return threading.Lock()
+
+
 # ---------------------------------------------------------------------------
 # Sidebar and navigation
 # ---------------------------------------------------------------------------
@@ -435,10 +472,11 @@ def barra_lateral() -> None:
         with st.expander(t("guia_titulo"), expanded=True):
             st.markdown(t("guia_texto"))
             st.caption(t("que_es_prompt"))
-        ruta = FICHERO_REVISIONES
-        if ruta.is_relative_to(RAIZ):
-            ruta = ruta.relative_to(RAIZ)
-        st.caption(t("revisiones_en", ruta=ruta.as_posix()))
+        if not SOLO_GITHUB:
+            ruta = FICHERO_REVISIONES
+            if ruta.is_relative_to(RAIZ):
+                ruta = ruta.relative_to(RAIZ)
+            st.caption(t("revisiones_en", ruta=ruta.as_posix()))
         st.caption(t("acerca", url=URL_PROYECTO))
 
 
@@ -540,7 +578,7 @@ def pantalla_analisis() -> None:
 def ejecutar_analisis(repos, hilos: int, excluir: str) -> None:
     filas: list[dict] = []
     errores: list[str] = []
-    with st.status(t("en_curso"), expanded=True) as estado:
+    with st.status(t("en_curso"), expanded=True) as estado, cerrojo_motor():
         for i, (nombre, carpeta, url) in enumerate(repos, start=1):
             try:
                 if url:
@@ -718,7 +756,9 @@ def guardar_revision(clave: str, sufijo: str) -> None:
         revisiones.pop(clave, None)
     else:
         revisiones[clave] = nueva
-    guardar_revisiones(FICHERO_REVISIONES, revisiones)
+    # In shared mode the reviews stay in the visitor's session only.
+    if not SOLO_GITHUB:
+        guardar_revisiones(FICHERO_REVISIONES, revisiones)
     st.session_state["_guardado"] = clave
 
 
@@ -832,7 +872,9 @@ def main() -> None:
     if st.session_state.get("idioma") not in IDIOMAS:
         st.session_state["idioma"] = IDIOMA_POR_DEFECTO
     if "revisiones" not in st.session_state:
-        st.session_state["revisiones"] = cargar_revisiones(FICHERO_REVISIONES)
+        # In shared mode every visitor starts with no reviews.
+        st.session_state["revisiones"] = {} if SOLO_GITHUB else cargar_revisiones(FICHERO_REVISIONES)
+    preparar_gramatica()
 
     barra_lateral()
     # A plain name for the tool goes first, so anyone opening the page knows

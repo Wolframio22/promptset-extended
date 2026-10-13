@@ -72,9 +72,17 @@ Three steps, chosen at the top of the page:
    Reviews are saved in `data/revisiones.json` and included in the export.
 
 The language (Spanish, English, Catalan) is chosen in the sidebar; the texts
-live in `app_text.py`. To share the interface with someone else (for example
+live in `app_text.py`. To share the interface with other people (for example
 through a tunnel), start it with `PROMPTSET_SOLO_GITHUB=1 streamlit run app.py`:
-the option to analyse a folder of this computer is then hidden.
+the option to analyse a folder of this computer is then hidden, and each
+visitor's reviews stay in their own browser session.
+
+`streamlit_app.py` starts the interface in that shared mode. It is the file
+to choose when publishing it on [Streamlit Community Cloud](https://share.streamlit.io),
+with Python 3.11 under *Advanced settings* (tree-sitter 0.20 compiles the
+grammar with `distutils`, which Python 3.12 removed). `packages.txt` installs
+the compiler and git there, and the first time the interface starts it
+downloads and compiles the grammar.
 
 ## Studies
 
