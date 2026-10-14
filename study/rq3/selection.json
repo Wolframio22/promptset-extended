@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-11T13:11:43",
+  "topics": [
+    "llm",
+    "large-language-models",
+    "langchain",
+    "openai",
+    "chatgpt",
+    "gpt",
+    "llm-agent",
+    "llm-agents",
+    "ai-agent",
+    "ai-agents",
+    "rag",
+    "retrieval-augmented-generation",
+    "anthropic",
+    "claude",
+    "llamaindex",
+    "autogen",
+    "prompt-engineering",
+    "generative-ai",
+    "llm-app"
+  ],
+  "bands": [
+    "20-99",
+    "100-499",
+    "500-1999",
+    "2000+"
+  ],
+  "pushed_since": "2025-01-01",
+  "max_size_mb": 500,
+  "pages_per_query": 2,
+  "seed": 42,
+  "candidates": 5081,
+  "sample": 1000,
+  "sample_per_band": {
+    "20-99": 250,
+    "100-499": 250,
+    "500-1999": 250,
+    "2000+": 250
+  }
+}
