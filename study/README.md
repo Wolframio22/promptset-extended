@@ -88,3 +88,8 @@ python study/rq3/analyze_study.py --labels study/rq3/analysis/validation_sample.
 The summary and `tables.tex` then include the share of real prompts in each
 group (with a 95 % Wilson interval) and the estimated precision of each
 version. The labelled file is never overwritten by later runs.
+
+The labelled file contains the captured code, so it is not tracked by git
+(see `.gitignore`), and neither is `detections.csv`.
+`analysis/validation_labels.csv` keeps the label, a short reason and the
+link to each detection, without the captured text.

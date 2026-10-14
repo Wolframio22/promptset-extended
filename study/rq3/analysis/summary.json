@@ -1,0 +1,417 @@
+{
+ "sample": {
+  "selected": 1000,
+  "analysed": 1000,
+  "failures": {},
+  "with_python": 1000,
+  "with_llm_library": 705,
+  "with_http_model_calls": 469,
+  "with_llm_library_or_http": 782,
+  "with_prompts_final": 790,
+  "pct_with_prompts_final": 79.0,
+  "with_prompts_original": 842,
+  "by_band": {
+   "20-99": {
+    "selected": 250,
+    "analysed": 250,
+    "with_py": 250,
+    "with_llm_library": 155,
+    "with_prompts": 175,
+    "pct_with_prompts": 70.0,
+    "median_detections_with_prompts": 8,
+    "median_detections_all": 3.5
+   },
+   "100-499": {
+    "selected": 250,
+    "analysed": 250,
+    "with_py": 250,
+    "with_llm_library": 157,
+    "with_prompts": 190,
+    "pct_with_prompts": 76.0,
+    "median_detections_with_prompts": 10.0,
+    "median_detections_all": 5.0
+   },
+   "500-1999": {
+    "selected": 250,
+    "analysed": 250,
+    "with_py": 250,
+    "with_llm_library": 200,
+    "with_prompts": 214,
+    "pct_with_prompts": 85.6,
+    "median_detections_with_prompts": 14.0,
+    "median_detections_all": 10.0
+   },
+   "2000+": {
+    "selected": 250,
+    "analysed": 250,
+    "with_py": 250,
+    "with_llm_library": 193,
+    "with_prompts": 211,
+    "pct_with_prompts": 84.4,
+    "median_detections_with_prompts": 22,
+    "median_detections_all": 15.0
+   }
+  }
+ },
+ "density": {
+  "median_detections": 12.0,
+  "q1": 4.0,
+  "q3": 41.0,
+  "mean_detections": 41.1,
+  "max_detections": 1538,
+  "median_files": 6.0,
+  "median_detections_per_kloc": 0.85,
+  "top_repositories": [
+   [
+    1538,
+    "EvolvingLMMs-Lab/NEO"
+   ],
+   [
+    813,
+    "agno-agi/agno"
+   ],
+   [
+    792,
+    "pipeshub-ai/pipeshub-ai"
+   ],
+   [
+    564,
+    "killthefullmoon/PhyX"
+   ],
+   [
+    543,
+    "vllm-project/vllm"
+   ],
+   [
+    540,
+    "LeoYeAI/openclaw-master-skills"
+   ],
+   [
+    478,
+    "codeofaxel/Kiln"
+   ],
+   [
+    472,
+    "Tencent/AI-Infra-Guard"
+   ],
+   [
+    404,
+    "XiaoLuoLYG/GOD"
+   ],
+   [
+    337,
+    "halilkirazkaya/pentester-mcp"
+   ]
+  ],
+  "spearman_stars_detections": 0.236,
+  "spearman_loc_detections": 0.656,
+  "repos_prompts_mostly_in_prompt_files": 48,
+  "repos_with_any_prompt_file_detection": 245
+ },
+ "libraries": {
+  "population": 790,
+  "counts": {
+   "OpenAI": 397,
+   "Hugging Face": 265,
+   "MCP": 199,
+   "LangChain": 194,
+   "Anthropic": 174,
+   "Google Gemini": 130,
+   "LangGraph": 89,
+   "LiteLLM": 88,
+   "vLLM": 64,
+   "LlamaIndex": 41,
+   "Ollama": 41,
+   "Cohere": 30,
+   "CrewAI": 26,
+   "llama.cpp": 24,
+   "Mistral": 21,
+   "PydanticAI": 20,
+   "DashScope (Qwen)": 19,
+   "Groq": 18,
+   "Instructor": 17,
+   "AutoGen": 17,
+   "Zhipu AI": 14,
+   "Together AI": 11,
+   "DSPy": 8,
+   "Replicate": 7,
+   "Haystack": 6,
+   "smolagents": 6,
+   "Outlines": 3,
+   "Semantic Kernel": 3,
+   "Qianfan (Baidu)": 1,
+   "Guidance": 1
+  },
+  "pct": {
+   "OpenAI": 50.3,
+   "Hugging Face": 33.5,
+   "MCP": 25.2,
+   "LangChain": 24.6,
+   "Anthropic": 22.0,
+   "Google Gemini": 16.5,
+   "LangGraph": 11.3,
+   "LiteLLM": 11.1,
+   "vLLM": 8.1,
+   "LlamaIndex": 5.2,
+   "Ollama": 5.2,
+   "Cohere": 3.8,
+   "CrewAI": 3.3,
+   "llama.cpp": 3.0,
+   "Mistral": 2.7,
+   "PydanticAI": 2.5,
+   "DashScope (Qwen)": 2.4,
+   "Groq": 2.3,
+   "Instructor": 2.2,
+   "AutoGen": 2.2,
+   "Zhipu AI": 1.8,
+   "Together AI": 1.4,
+   "DSPy": 1.0,
+   "Replicate": 0.9,
+   "Haystack": 0.8,
+   "smolagents": 0.8,
+   "Outlines": 0.4,
+   "Semantic Kernel": 0.4,
+   "Qianfan (Baidu)": 0.1,
+   "Guidance": 0.1
+  },
+  "pct_all_with_python": {
+   "OpenAI": 40.2,
+   "Hugging Face": 30.1,
+   "MCP": 20.4,
+   "LangChain": 20.0,
+   "Anthropic": 17.8,
+   "Google Gemini": 13.1,
+   "LiteLLM": 8.9,
+   "LangGraph": 8.9,
+   "vLLM": 6.8,
+   "LlamaIndex": 4.5,
+   "Ollama": 4.2,
+   "Cohere": 3.0,
+   "CrewAI": 2.6,
+   "llama.cpp": 2.4,
+   "Mistral": 2.1,
+   "PydanticAI": 2.0,
+   "DashScope (Qwen)": 1.9,
+   "Groq": 1.8,
+   "Instructor": 1.7,
+   "AutoGen": 1.7,
+   "Zhipu AI": 1.4,
+   "Together AI": 1.1,
+   "DSPy": 0.8,
+   "Replicate": 0.7,
+   "Haystack": 0.6,
+   "smolagents": 0.6,
+   "Outlines": 0.4,
+   "Semantic Kernel": 0.3,
+   "Qianfan (Baidu)": 0.1,
+   "Guidance": 0.1
+  },
+  "none_recognised": 143,
+  "median_libraries": 2.0,
+  "top_pairs": [
+   [
+    "Hugging Face + OpenAI",
+    167
+   ],
+   [
+    "Anthropic + OpenAI",
+    154
+   ],
+   [
+    "MCP + OpenAI",
+    121
+   ],
+   [
+    "LangChain + OpenAI",
+    120
+   ],
+   [
+    "Google Gemini + OpenAI",
+    110
+   ],
+   [
+    "LangChain + LangGraph",
+    84
+   ],
+   [
+    "Anthropic + Google Gemini",
+    80
+   ],
+   [
+    "Anthropic + MCP",
+    76
+   ]
+  ],
+  "with_vector_store": 156,
+  "with_http_model_calls": 449
+ },
+ "types": {
+  "Agente": {
+   "repos": 471,
+   "pct": 59.6
+  },
+  "RAG o consulta de documentos": {
+   "repos": 269,
+   "pct": 34.1
+  },
+  "Herramienta para programadores": {
+   "repos": 168,
+   "pct": 21.3
+  },
+  "Framework o biblioteca": {
+   "repos": 150,
+   "pct": 19.0
+  },
+  "Otros": {
+   "repos": 118,
+   "pct": 14.9
+  },
+  "Chatbot o asistente": {
+   "repos": 106,
+   "pct": 13.4
+  },
+  "Investigación o evaluación": {
+   "repos": 92,
+   "pct": 11.6
+  }
+ },
+ "where_prompts_live": {
+  "repos_with_prompt_files_outside_py": 235,
+  "pct_repos_with_prompt_files_outside_py": 29.7,
+  "repos_with_notebooks": 113,
+  "test_detections_excluded": 24904
+ },
+ "heuristics_final": {
+  "Variable con nombre de prompt": {
+   "detections": 16924,
+   "pct_detections": 52.2,
+   "repos": 728,
+   "pct_repos": 92.2
+  },
+  "Llamada a la API de OpenAI": {
+   "detections": 1751,
+   "pct_detections": 5.4,
+   "repos": 325,
+   "pct_repos": 41.1
+  },
+  "Plantilla o mensaje de LangChain": {
+   "detections": 7638,
+   "pct_detections": 23.5,
+   "repos": 362,
+   "pct_repos": 45.8
+  },
+  "Llamada a chat() o summarize()": {
+   "detections": 724,
+   "pct_detections": 2.2,
+   "repos": 144,
+   "pct_repos": 18.2
+  },
+  "Herramienta declarada con @tool": {
+   "detections": 5106,
+   "pct_detections": 15.7,
+   "repos": 171,
+   "pct_repos": 21.6
+  },
+  "Herramienta declarada como clase": {
+   "detections": 297,
+   "pct_detections": 0.9,
+   "repos": 26,
+   "pct_repos": 3.3
+  },
+  "Plantilla cargada desde archivo": {
+   "detections": 4,
+   "pct_detections": 0.0,
+   "repos": 1,
+   "pct_repos": 0.1
+  }
+ },
+ "prompts": {
+  "detections": 32444,
+  "literal": 23714,
+  "pct_literal": 73.1,
+  "median_chars_literal": 178.0,
+  "median_words_literal": 26.0,
+  "features_pct_of_literal": {
+   "Plantilla con variables": 38.0,
+   "Texto de varias líneas": 62.0,
+   "Estructura Markdown (títulos o listas)": 19.9,
+   "Define un rol («You are…»)": 16.7,
+   "Pide o menciona JSON": 12.2,
+   "Incluye ejemplos": 1.5,
+   "Usa etiquetas XML": 2.9,
+   "Pide razonar paso a paso": 2.4,
+   "Escrito en chino, japonés o coreano": 8.9
+  }
+ },
+ "comparison": {
+  "detections_original": 64189,
+  "detections_final": 32444,
+  "change_pct": -49.5,
+  "kept": 25558,
+  "removed": 38631,
+  "added": 6886,
+  "files_original": 18194,
+  "files_final": 11784,
+  "repos_original": 842,
+  "repos_final": 790,
+  "median_detections_original": 22.0,
+  "median_detections_final": 12.0,
+  "seconds_original": 4701.4,
+  "seconds_final": 1644.7,
+  "median_seconds_original": 1.24,
+  "median_seconds_final": 0.45,
+  "speedup": 2.86
+ },
+ "validation": {
+  "groups": {
+   "eliminada": {
+    "si": 0,
+    "no": 49,
+    "dudoso": 1,
+    "sin_etiqueta": 0,
+    "pct_prompt": 0.0,
+    "ci95": [
+     0.0,
+     7.3
+    ],
+    "pct_prompt_doubtful_as_no": 0.0
+   },
+   "nueva": {
+    "si": 28,
+    "no": 2,
+    "dudoso": 0,
+    "sin_etiqueta": 0,
+    "pct_prompt": 93.3,
+    "ci95": [
+     78.7,
+     98.2
+    ],
+    "pct_prompt_doubtful_as_no": 93.3
+   },
+   "conservada": {
+    "si": 64,
+    "no": 20,
+    "dudoso": 16,
+    "sin_etiqueta": 0,
+    "pct_prompt": 76.2,
+    "ci95": [
+     66.1,
+     84.0
+    ],
+    "pct_prompt_doubtful_as_no": 64.0
+   }
+  },
+  "precision_final": [
+   70.8,
+   78.9,
+   85.7
+  ],
+  "precision_original": [
+   27.1,
+   31.3,
+   35.6
+  ],
+  "estimated_real_prompts_removed": 0,
+  "estimated_real_prompts_added": 6425
+ }
+}
