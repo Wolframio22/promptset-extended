@@ -27,6 +27,10 @@ See [`NOTICE`](NOTICE) for attribution to the original work and
 
 ## Setup
 
+Use Python 3.10 or 3.11: tree-sitter 0.20 builds the grammar with
+`distutils`, which Python 3.12 removed, so the last step below fails on
+newer versions.
+
 ```bash
 # Virtual environment and dependencies
 python3 -m venv venv && source venv/bin/activate
@@ -69,7 +73,8 @@ Three steps, chosen at the top of the page:
    review status, free text) and CSV export.
 3. **Review**: each detection in its code, with a link to the exact line on
    GitHub. Mark whether it is a prompt, rate it (1–5 stars) and comment it.
-   Reviews are saved in `data/revisiones.json` and included in the export.
+   Reviews are saved in `data/revisiones.json` and included in the export,
+   which can also be downloaded from this step.
 
 The language (Spanish, English, Catalan) is chosen in the sidebar; the texts
 live in `app_text.py`. To share the interface with other people (for example
