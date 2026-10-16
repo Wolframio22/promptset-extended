@@ -848,6 +848,14 @@ def pantalla_revision() -> None:
         if st.session_state.get("_guardado") == actual:
             st.caption(f":material/check: {t('guardado')}")
 
+        # The download is also offered here: in the user study, participants
+        # looked for it in this step after reviewing a detection.
+        st.divider()
+        exportable = tabla_exportable(df[df["_clave"].isin(claves)], revisiones, idioma())
+        st.download_button(t("descargar"), exportable.to_csv(index=False), file_name="prompts.csv",
+                           mime="text/csv", help=t("descargar_ayuda"), on_click="ignore",
+                           icon=":material/download:", key="descargar_revision")
+
 
 # ---------------------------------------------------------------------------
 # Entry point
