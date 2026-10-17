@@ -2,6 +2,7 @@
 tree-sitter==0.20.4
 tqdm
 
-# Graphical interface (app.py)
+# Graphical interface (app.py); altair draws its charts and also comes with streamlit
 streamlit>=1.45
 pandas
+altair
