@@ -10,12 +10,14 @@ pip install -r study/requirements.txt     # matplotlib, only for the figures
 
 ## RQ3: large-scale study on GitHub
 
-*What are the characteristics of prompt-based repositories?* The study takes a
-stratified random sample of public Python repositories tagged with
-LLM-related topics, analyses each one with promptset-extended and with the
-original PromptSet heuristics, and describes the libraries they use, how
-many prompts they contain, how those prompts are written and how much the
-two versions of the tool differ.
+*What are the characteristics of the GitHub repositories that declare
+themselves based on language models, and of the prompts in their code?* The
+study takes a stratified random sample of public Python repositories tagged
+with LLM-related topics, analyses each one with promptset-extended and with
+the original PromptSet heuristics, and describes the libraries they use, how
+many detections the tool makes in them, how the detected prompts are written
+and how much the two versions of the tool differ. A detection is not always a
+prompt: the manual check of step 4 estimates how many are.
 
 ### 1. Select the repositories (about 6 minutes)
 

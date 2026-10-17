@@ -111,4 +111,6 @@ request (`.github/workflows/ci.yml`).
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT for the code written for this thesis — see [LICENSE](LICENSE). The code
+imported from PromptSet in the first commit came without a licence, so its
+authors keep their rights; see [NOTICE](NOTICE).
