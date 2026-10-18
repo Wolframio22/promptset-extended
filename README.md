@@ -40,7 +40,7 @@ pip install -r requirements.txt
 # tree-sitter 0.20.4 in requirements.txt)
 git clone --branch v0.20.0 https://github.com/tree-sitter/tree-sitter-python
 mkdir -p build
-python -c "from tree_sitter import Language; Language.build_library('build/my-languages.so', ['tree-sitter-python'])"
+SETUPTOOLS_USE_DISTUTILS=stdlib python -c "from tree_sitter import Language; Language.build_library('build/my-languages.so', ['tree-sitter-python'])"
 ```
 
 ## Command-line usage
